@@ -1,7 +1,11 @@
-<script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
-</script>
-
 <template>
-  <HelloWorld />
+  <v-app>
+    <v-main>
+      <v-container>
+        <v-btn>
+          PS Lite
+        </v-btn>
+      </v-container>
+    </v-main>
+  </v-app>
 </template>
