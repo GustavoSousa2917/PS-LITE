@@ -1,0 +1,34 @@
+.appbar {
+    display: flex;
+    align-items: center;
+    height: 64px;
+    padding: 0 24px;
+    background: #ffffff;
+    color: #1e6dc6;
+    box-shadow: 0 2px 8px rgba(14, 15, 15, 0.2);
+}
+
+.appbar-title {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.nav-links {
+    display: flex;
+    gap: 2rem;
+    margin-left: auto;
+}
+
+.nav-link {
+    color: #3d6fd3;
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: color 0.3s ease;
+    border-bottom: 2px solid transparent;
+    padding-bottom: 4px;
+}
+
+.nav-link:hover {
+    color: rgb(6, 2, 2);
+    border-bottom-color: #3b82f6;
+}

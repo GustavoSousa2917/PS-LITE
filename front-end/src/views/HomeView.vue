@@ -1,8 +1,5 @@
-
 <template>
-    <appbar />
-    
-        <h1>Lista de Processos</h1>
+    <h1>Home View</h1>
 </template>
 <style>
 h1 {
