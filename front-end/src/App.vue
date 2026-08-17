@@ -1,20 +1,21 @@
 <script setup lang="ts">
-import appbar from './components/Appbar.vue'
+import Appbar from './components/Appbar.vue'
 </script>
 
 <template>
-  <header class ="appbar">
-    <appbar />
-  </header>
-    <div class="content">
+  <v-app>
+    <Appbar />
+    <v-main class="bg-grey-lighten-4">
       <router-view />
-      </div>
+    </v-main>
+  </v-app>
 </template>
 
-<style scoped>
-:global(body) {
+<style>
+/* Estilos globais limpos */
+html, body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f3f4f6;
+  padding: 0;
+  font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
 }
 </style>
