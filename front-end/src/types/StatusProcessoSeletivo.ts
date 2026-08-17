@@ -1,5 +1,5 @@
 export type StatusProcessoSeletivo =
-  | 'CADASTRO'
+  | 'CADASTRADO'
   | 'FINALIZADO'
   | 'CANCELADO'
 
