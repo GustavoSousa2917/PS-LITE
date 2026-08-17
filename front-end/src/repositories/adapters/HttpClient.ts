@@ -1,12 +1,10 @@
-import Axios from 'axios';
+import axios from 'axios'
 
-declare const env: {
-    HTTP_BASE_URL?: string;
-};
+const HttpClient = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+})
 
-export const httpClient = Axios.create({
-    baseURL: env?.HTTP_BASE_URL || 'http://localhost:8080',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-});
+export default HttpClient
