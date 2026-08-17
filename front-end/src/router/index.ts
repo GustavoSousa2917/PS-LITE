@@ -9,7 +9,7 @@ const router = createRouter({
             component: () => import('../views/HomeView.vue')
         },
         {
-            path: '//processos',
+            path: '/processos',
             name: 'Processos',
             component: () => import('../views/processos/ProcessoListView.vue')
         },

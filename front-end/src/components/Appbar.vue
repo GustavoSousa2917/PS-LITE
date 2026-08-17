@@ -1,10 +1,10 @@
-import './appbar.css'
+
 <template>
     <v-app-bar class="appbar">
         <v-app-bar-title class="appbar-title">PS-LITE</v-app-bar-title>
         <nav class="nav-links">
-            <a href="/" class="nav-link">Home</a>
-            <a href="/processos" class="nav-link">Processos</a>
+            <router-link to="/" class="nav-link">Home</router-link>
+            <router-link to="/processos" class="nav-link">Processos</router-link>
         </nav>
     </v-app-bar>
 </template>
