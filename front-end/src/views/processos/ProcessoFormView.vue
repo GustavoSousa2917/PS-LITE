@@ -1,16 +1,9 @@
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useForm } from 'vee-validate';
+import { useForm, useField } from 'vee-validate';
 import * as z from 'zod';
-
-let toTypedSchema = (schema) => schema;
-
-try {
-  ({ toTypedSchema } = await import('@vee-validate/zod'));
-} catch (error) {
-  console.warn('[ProcessoFormView] @vee-validate/zod não está disponível. Usando validação Zod direta.', error);
-}
+import { toTypedSchema } from '@vee-validate/zod';
 
 const route = useRoute();
 const router = useRouter();
@@ -18,7 +11,15 @@ const router = useRouter();
 const STATUS_OPTIONS = ['ATIVO', 'PAUSADO', 'FINALIZADO'];
 const apiBaseUrl = import.meta.env.VITE_API_URL || '/api';
 
-const processo = ref(null);
+interface Processo {
+  id?: string | number;
+  nome: string;
+  descricao?: string | null;
+  qtdVagas: number;
+  status: 'ATIVO' | 'PAUSADO' | 'FINALIZADO' | string;
+}
+
+const processo = ref<Processo | null>(null);
 const loading = ref(false);
 const saving = ref(false);
 const erro = ref('');
@@ -53,30 +54,34 @@ const { handleSubmit, errors, setValues } = useForm({
   }
 });
 
-const [nome, nomeProps] = defineField('nome');
-const [descricao, descricaoProps] = defineField('descricao');
-const [qtdVagas, qtdVagasProps] = defineField('qtdVagas');
-const [status, statusProps] = defineField('status');
+const nome = useField('nome');
+const descricao = useField('descricao');
+const qtdVagas = useField('qtdVagas');
+const status = useField('status');
 
-const formatStatus = (value) => {
-  const labels = {
+const nomeProps = { name: 'nome' };
+const qtdVagasProps = { name: 'qtdVagas' };
+const statusProps = { name: 'status' };
+
+const formatStatus = (value: string | number) => {
+  const labels: Record<string, string> = {
     ATIVO: 'Ativo',
     PAUSADO: 'Pausado',
     FINALIZADO: 'Finalizado'
   };
 
-  return labels[value] || value;
+  return labels[String(value)] ?? String(value);
 };
 
 const redirectToListagem = () => {
   router.push('/processos');
 };
 
-const redirectToDetalhe = (id) => {
+const redirectToDetalhe = (id: string) => {
   router.push(`/processos/${id}`);
 };
 
-const parseJson = async (response) => {
+const parseJson = async (response: Response) => {
   if (response.status === 204) return null;
 
   const text = await response.text();
@@ -115,13 +120,13 @@ const loadProcesso = async () => {
       });
     }
   } catch (error) {
-    erro.value = error.message || 'Erro ao carregar processo.';
+    erro.value = error instanceof Error ? error.message : 'Erro ao carregar processo.';
   } finally {
     loading.value = false;
   }
 };
 
-const submitForm = handleSubmit(async (values) => {
+const submitForm = handleSubmit(async (values: any) => {
   const payload = {
     nome: values.nome,
     descricao: values.descricao || '',
@@ -160,7 +165,7 @@ const submitForm = handleSubmit(async (values) => {
 
     redirectToListagem();
   } catch (error) {
-    erro.value = error.message || 'Erro ao salvar o processo.';
+    erro.value = (error instanceof Error ? error.message : String(error)) || 'Erro ao salvar o processo.';
   } finally {
     saving.value = false;
   }
@@ -245,26 +250,26 @@ watch(
       <form class="processo-form" @submit.prevent="submitForm">
         <div class="field-group">
           <label for="nome">Nome</label>
-          <input id="nome" v-model="nome" v-bind="nomeProps" type="text" placeholder="Digite o nome do processo" />
+          <input id="nome" v-model="nome.value" v-bind="nomeProps" type="text" placeholder="Digite o nome do processo" />
           <small v-if="errors.nome" class="error-message">{{ errors.nome }}</small>
         </div>
 
         <div class="field-group">
           <label for="descricao">Descrição</label>
-          <textarea id="descricao" v-model="descricao" v-bind="descricaoProps" rows="4" placeholder="Descreva o processo" />
+          <textarea id="descricao" v-model="descricao.value" rows="4" placeholder="Descreva o processo" />
           <small v-if="errors.descricao" class="error-message">{{ errors.descricao }}</small>
         </div>
 
         <div class="field-row">
           <div class="field-group">
             <label for="qtdVagas">Quantidade de vagas</label>
-            <input id="qtdVagas" v-model.number="qtdVagas" v-bind="qtdVagasProps" type="number" min="0" />
+            <input id="qtdVagas" v-model.number="qtdVagas.value" v-bind="qtdVagasProps" type="number" min="0" />
             <small v-if="errors.qtdVagas" class="error-message">{{ errors.qtdVagas }}</small>
           </div>
 
           <div class="field-group">
             <label for="status">Status</label>
-            <select id="status" v-model="status" v-bind="statusProps">
+            <select id="status" v-model="status.value" v-bind="statusProps">
               <option v-for="option in STATUS_OPTIONS" :key="option" :value="option">
                 {{ formatStatus(option) }}
               </option>
@@ -355,6 +360,7 @@ select {
   padding: 10px 12px;
   font: inherit;
   background: #fff;
+  color: #111827;
 }
 
 input:focus,
