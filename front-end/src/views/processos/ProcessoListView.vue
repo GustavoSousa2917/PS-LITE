@@ -123,7 +123,13 @@ onMounted(() => {
           <th class="text-right">Ações</th>
         </tr>
       </thead>
-
+      <v-div>
+        <v-button 
+        color="white"
+        background="green" 
+        @click="novoProcesso">Novo Processo
+        </v-button>
+      </v-div>
       <tbody>
         <tr
           v-for="processo in processos"
