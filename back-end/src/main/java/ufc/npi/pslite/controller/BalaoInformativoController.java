@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ufc.npi.pslite.model.BalaoInformativo;
 import ufc.npi.pslite.service.BalaoInformativoService;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -24,7 +25,7 @@ public class BalaoInformativoController {
         BalaoInformativo criado = service.create(balao);
         return ResponseEntity.status(HttpStatus.CREATED).body(criado);
     }
-    @GetMapping("/por-processo/{idProcess}")
+    @GetMapping("/por-processo/{idProcesso}")
     public ResponseEntity<List<BalaoInformativo>> listarPorProcesso(@PathVariable Long idProcesso) {
         List<BalaoInformativo> lista = service.listarPorProcesso(idProcesso);
         return ResponseEntity.ok(lista);
@@ -39,7 +40,7 @@ public class BalaoInformativoController {
         BalaoInformativo atualizado = service.update (id, balaoAtualizado);
         return ResponseEntity.ok(atualizado);
     }
-    @DeleteMapping("/{id")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();

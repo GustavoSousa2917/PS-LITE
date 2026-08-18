@@ -1,6 +1,7 @@
 package ufc.npi.pslite.service;
 
 import org.springframework.stereotype.Service;
+import ufc.npi.pslite.exception.NotFoundException;
 import ufc.npi.pslite.model.BalaoInformativo;
 import ufc.npi.pslite.model.ProcessoSeletivo;
 import ufc.npi.pslite.repository.BalaoInformativoRepository;
@@ -28,7 +29,7 @@ public class BalaoInformativoService {
         long idProcesso = balao.getProcessoSeletivo().getId();
 
         ProcessoSeletivo processoValidado = processoRepository.findById(idProcesso)
-                .orElseThrow(() -> new RuntimeException("Processo seletivo não encontrado com o ID: " + idProcesso));
+                .orElseThrow(() -> new NotFoundException("Processo seletivo não encontrado com o ID: " + idProcesso));
 
         balao.setProcessoSeletivo(processoValidado);
         return balaoRepository.save(balao);
@@ -39,7 +40,7 @@ public class BalaoInformativoService {
     }
     public BalaoInformativo findById(Long id){
         return balaoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Balão informativo não encontrado"));
+                .orElseThrow(() -> new NotFoundException("Balão informativo não encontrado"));
     }
     public BalaoInformativo update(Long id, BalaoInformativo balaoAtualizado){
         BalaoInformativo balaoExiste = this.findById(id);
