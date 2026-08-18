@@ -1,8 +1,7 @@
 package ufc.npi.pslite.model;
 
 public enum StatusProcessoSeletivo {
-
-    CADASTRO,
+    CADASTRADO,
     FINALIZADO,
     CANCELADO
 }
