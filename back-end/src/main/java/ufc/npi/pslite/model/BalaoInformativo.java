@@ -1,5 +1,6 @@
 package ufc.npi.pslite.model;
 
+import jakarta.validation.constraints.NotNull;
 import ufc.npi.pslite.model.ProcessoSeletivo;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -8,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.JoinColumn;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 
@@ -39,7 +41,6 @@ public class BalaoInformativo {
 
     public String getMensagem() {return mensagem;}
     public void setMensagem(String mensagem) {this.mensagem = mensagem;}
-
 
     @ManyToOne
     @JoinColumn(name = "processo_seletivo_id" , nullable = false)
