@@ -8,15 +8,16 @@ import { toTypedSchema } from '@vee-validate/zod';
 const route = useRoute();
 const router = useRouter();
 
-const STATUS_OPTIONS = ['ATIVO', 'PAUSADO', 'FINALIZADO'];
-const apiBaseUrl = import.meta.env.VITE_API_URL || '/api';
+const STATUS_OPTIONS = ['CADASTRADO', 'FINALIZADO', 'CANCELADO'];
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+const processosUrl = `${apiBaseUrl}/processo-seletivo`;
 
 interface Processo {
   id?: null;
   nome: string;
   descricao?: string | null;
   qtdVagas: number;
-  status: 'ATIVO' | 'PAUSADO' | 'FINALIZADO' | string;
+  status: 'CADASTRADO' | 'FINALIZADO' | 'CANCELADO' | string;
 }
 
 const processo = ref<Processo | null>(null);
@@ -37,7 +38,7 @@ const schema = toTypedSchema(
     nome: z.string().trim().min(1, 'Nome é obrigatório.'),
     descricao: z.string().trim().optional().default(''),
     qtdVagas: z.coerce.number({ invalid_type_error: 'Quantidade de vagas é obrigatória.' }).min(0, 'Quantidade de vagas deve ser maior ou igual a 0.'),
-    status: z.enum(['ATIVO', 'PAUSADO', 'FINALIZADO'], {
+    status: z.enum(['CADASTRADO', 'FINALIZADO', 'CANCELADO'], {
       required_error: 'Status é obrigatório.',
       invalid_type_error: 'Status inválido.'
     })
@@ -52,12 +53,12 @@ const {
 } = useForm({
   validationSchema: schema,
 
-  initialValues: {
-    nome: '',
-    descricao: '',
-    qtdVagas: 0,
-    status: 'ATIVO',
-  },
+ initialValues: {
+  nome: '',
+  descricao: '',
+  qtdVagas: 0,
+  status: 'CADASTRADO', // era 'ATIVO'
+},
 });
 
 const [nome, nomeProps] = defineField('nome');
@@ -67,11 +68,10 @@ const [status, statusProps] = defineField('status');
 
 const formatStatus = (value: string | number) => {
   const labels: Record<string, string> = {
-    ATIVO: 'Ativo',
-    PAUSADO: 'Pausado',
-    FINALIZADO: 'Finalizado'
+    CADASTRADO: 'Cadastrado',
+    FINALIZADO: 'Finalizado',
+    CANCELADO: 'Cancelado'
   };
-
   return labels[String(value)] ?? String(value);
 };
 
@@ -99,7 +99,7 @@ const loadProcesso = async () => {
   notFound.value = false;
 
   try {
-    const response = await fetch(`${apiBaseUrl}/processos/${id}`);
+    const response = await fetch(`${processosUrl}/${id}`);
 
     if (!response.ok) {
       if (response.status === 404) {
@@ -118,7 +118,7 @@ const loadProcesso = async () => {
         nome: data.nome || '',
         descricao: data.descricao || '',
         qtdVagas: Number(data.qtdVagas ?? 0),
-        status: data.status || 'ATIVO'
+        status: data.status || 'CADASTRADO'
       });
     }
   } catch (error) {
@@ -142,7 +142,7 @@ const submitForm = handleSubmit(async (values: any) => {
   try {
     const id = route.params.id;
     const method = currentMode.value === 'edit' && id ? 'PUT' : 'POST';
-    const url = id && currentMode.value === 'edit' ? `${apiBaseUrl}/processos/${id}` : `${apiBaseUrl}/processos`;
+    const url = id && currentMode.value === 'edit' ? `${processosUrl}/${id}` : processosUrl;
 
     const response = await fetch(url, {
       method,
@@ -264,7 +264,7 @@ watch(
 
         <div class="field-group">
           <label for="descricao">Descrição</label>
-          <textarea id="descricao" v-model="descricao" rows="4" placeholder="Descreva o processo" />
+          <textarea id="descricao" v-model="descricao" v-bind="descricaoProps" rows="4" placeholder="Descreva o processo" />
           <small v-if="errors.descricao" class="error-message">{{ errors.descricao }}</small>
         </div>
 
