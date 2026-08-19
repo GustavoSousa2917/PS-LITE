@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useForm, useField } from 'vee-validate';
+import { useForm } from 'vee-validate';
 import * as z from 'zod';
 import { toTypedSchema } from '@vee-validate/zod';
 
@@ -12,7 +12,7 @@ const STATUS_OPTIONS = ['ATIVO', 'PAUSADO', 'FINALIZADO'];
 const apiBaseUrl = import.meta.env.VITE_API_URL || '/api';
 
 interface Processo {
-  id?: string | number;
+  id?: null;
   nome: string;
   descricao?: string | null;
   qtdVagas: number;
@@ -44,24 +44,26 @@ const schema = toTypedSchema(
   })
 );
 
-const { handleSubmit, errors, setValues } = useForm({
+const {
+  handleSubmit,
+  errors,
+  setValues,
+  defineField,
+} = useForm({
   validationSchema: schema,
+
   initialValues: {
     nome: '',
     descricao: '',
     qtdVagas: 0,
-    status: 'ATIVO'
-  }
+    status: 'ATIVO',
+  },
 });
 
-const nome = useField('nome');
-const descricao = useField('descricao');
-const qtdVagas = useField('qtdVagas');
-const status = useField('status');
-
-const nomeProps = { name: 'nome' };
-const qtdVagasProps = { name: 'qtdVagas' };
-const statusProps = { name: 'status' };
+const [nome, nomeProps] = defineField('nome');
+const [descricao, descricaoProps] = defineField('descricao');
+const [qtdVagas, qtdVagasProps] = defineField('qtdVagas');
+const [status, statusProps] = defineField('status');
 
 const formatStatus = (value: string | number) => {
   const labels: Record<string, string> = {
@@ -250,26 +252,32 @@ watch(
       <form class="processo-form" @submit.prevent="submitForm">
         <div class="field-group">
           <label for="nome">Nome</label>
-          <input id="nome" v-model="nome.value" v-bind="nomeProps" type="text" placeholder="Digite o nome do processo" />
+          <input
+  id="nome"
+  v-model="nome"
+  v-bind="nomeProps"
+  type="text"
+  placeholder="Digite o nome do processo"
+/>
           <small v-if="errors.nome" class="error-message">{{ errors.nome }}</small>
         </div>
 
         <div class="field-group">
           <label for="descricao">Descrição</label>
-          <textarea id="descricao" v-model="descricao.value" rows="4" placeholder="Descreva o processo" />
+          <textarea id="descricao" v-model="descricao" rows="4" placeholder="Descreva o processo" />
           <small v-if="errors.descricao" class="error-message">{{ errors.descricao }}</small>
         </div>
 
         <div class="field-row">
           <div class="field-group">
             <label for="qtdVagas">Quantidade de vagas</label>
-            <input id="qtdVagas" v-model.number="qtdVagas.value" v-bind="qtdVagasProps" type="number" min="0" />
+            <input id="qtdVagas" v-model.number="qtdVagas" v-bind="qtdVagasProps" type="number" min="0" />
             <small v-if="errors.qtdVagas" class="error-message">{{ errors.qtdVagas }}</small>
           </div>
 
           <div class="field-group">
             <label for="status">Status</label>
-            <select id="status" v-model="status.value" v-bind="statusProps">
+            <select id="status" v-model="status" v-bind="statusProps">
               <option v-for="option in STATUS_OPTIONS" :key="option" :value="option">
                 {{ formatStatus(option) }}
               </option>

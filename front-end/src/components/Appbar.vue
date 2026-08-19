@@ -9,5 +9,5 @@
     </v-app-bar>
 </template>
 <style scoped>
-    @import './appbar.css';
+    @import './Appbar.css';
 </style>

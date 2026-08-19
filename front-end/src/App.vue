@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import Appbar from './components/Appbar.vue'
+
 </script>
 
 <template>
+  
   <v-app>
     <Appbar />
     <v-main class="bg-grey-lighten-4">
