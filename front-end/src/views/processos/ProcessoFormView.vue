@@ -1,51 +1,107 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useForm } from 'vee-validate';
-import * as z from 'zod';
-import { toTypedSchema } from '@vee-validate/zod';
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useForm } from 'vee-validate'
+import * as z from 'zod'
+import { toTypedSchema } from '@vee-validate/zod'
 
-const route = useRoute();
-const router = useRouter();
+const route = useRoute()
+const router = useRouter()
 
-const STATUS_OPTIONS = ['CADASTRADO', 'FINALIZADO', 'CANCELADO'];
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
-const processosUrl = `${apiBaseUrl}/processo-seletivo`;
+/**
+ * Status aceitos pela API.
+ *
+ * O "as const" é importante para o TypeScript
+ * não transformar os valores em string genérica.
+ */
+const STATUS_OPTIONS = [
+  'CADASTRADO',
+  'FINALIZADO',
+  'CANCELADO',
+] as const
+
+type StatusProcesso = (typeof STATUS_OPTIONS)[number]
 
 interface Processo {
-  id?: number| string | undefined;
-  nome: string;
-  descricao?: string | null;
-  qtdVagas: number;
-  status: 'CADASTRADO' | 'FINALIZADO' | 'CANCELADO' | string;
+  id?: number
+  idd?: number
+  nome: string
+  descricao?: string | null
+  qtdVagas: number
+  status: StatusProcesso
 }
 
-const processo = ref<Processo | null>(null);
-const loading = ref(false);
-const saving = ref(false);
-const erro = ref('');
-const notFound = ref(false);
-const currentMode = computed(() => {
-  const modeFromProp = route.query.mode || route.params.mode;
-  if (modeFromProp === 'edit') return 'edit';
-  if (modeFromProp === 'detail') return 'detail';
-  if (route.params.id) return 'edit';
-  return 'create';
-});
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
+const processosUrl = `${apiBaseUrl}/processo-seletivo`
 
+const processo = ref<Processo | null>(null)
+const loading = ref(false)
+const saving = ref(false)
+const erro = ref('')
+const notFound = ref(false)
+
+/**
+ * Identifica o modo da tela.
+ *
+ * /processos/novo          -> create
+ * /processos/:id/editar    -> edit
+ * /processos/:id?mode=...  -> conforme query
+ */
+const currentMode = computed<'create' | 'edit' | 'detail'>(() => {
+  const mode = route.query.mode
+
+  if (mode === 'edit') {
+    return 'edit'
+  }
+
+  if (mode === 'detail') {
+    return 'detail'
+  }
+
+  if (route.params.id) {
+    return 'edit'
+  }
+
+  return 'create'
+})
+
+/**
+ * Schema de validação.
+ */
 const schema = toTypedSchema(
   z.object({
     id: z.number().optional(),
-    nome: z.string().trim().min(1, 'Nome é obrigatório.'),
-    descricao: z.string().trim().optional().default(''),
-    qtdVagas: z.coerce.number({ invalid_type_error: 'Quantidade de vagas é obrigatória.' }).min(0, 'Quantidade de vagas deve ser maior ou igual a 0.'),
-    status: z.enum(['CADASTRADO', 'FINALIZADO', 'CANCELADO'], {
-      required_error: 'Status é obrigatório.',
-      invalid_type_error: 'Status inválido.'
-    })
-  })
-);
 
+    nome: z
+      .string()
+      .trim()
+      .min(1, 'Nome é obrigatório.'),
+
+    descricao: z
+      .string()
+      .trim()
+      .optional()
+      .default(''),
+
+    qtdVagas: z
+      .coerce
+      .number({
+        message: 'Quantidade de vagas é obrigatória.',
+      })
+      .min(
+        0,
+        'Quantidade de vagas deve ser maior ou igual a 0.',
+      ),
+
+    status: z.enum(STATUS_OPTIONS, {
+      message: 'Status inválido.',
+    }),
+  }),
+)
+
+/**
+ * Formulário.
+ */
 const {
   handleSubmit,
   errors,
@@ -54,253 +110,725 @@ const {
 } = useForm({
   validationSchema: schema,
 
- initialValues: {
-  id: undefined,
-  nome: '',
-  descricao: '',
-  qtdVagas: 0,
-  status: 'CADASTRADO', // era 'ATIVO'
-},
-});
+  initialValues: {
+    id: undefined,
+    nome: '',
+    descricao: '',
+    qtdVagas: 0,
+    status: 'CADASTRADO' as StatusProcesso,
+  },
+})
 
-const [nome, nomeProps] = defineField('nome');
-const [descricao, descricaoProps] = defineField('descricao');
-const [qtdVagas, qtdVagasProps] = defineField('qtdVagas');
-const [status, statusProps] = defineField('status');
+const [nome, nomeProps] = defineField('nome')
+const [descricao, descricaoProps] = defineField('descricao')
+const [qtdVagas, qtdVagasProps] = defineField('qtdVagas')
+const [status, statusProps] = defineField('status')
 
-const formatStatus = (value: string | number) => {
+/**
+ * Formata o status para exibição.
+ */
+function formatStatus(value: string) {
   const labels: Record<string, string> = {
     CADASTRADO: 'Cadastrado',
     FINALIZADO: 'Finalizado',
-    CANCELADO: 'Cancelado'
-  };
-  return labels[String(value)] ?? String(value);
-};
+    CANCELADO: 'Cancelado',
+  }
 
-const redirectToListagem = () => {
-  router.push('/processos');
-};
+  return labels[value] ?? value
+}
 
-const redirectToDetalhe = (id: string) => {
-  router.push(`/processos/${id}`);
-};
+/**
+ * Retorna o ID da rota.
+ *
+ * O ID da rota é a fonte principal para edição.
+ */
+function getRouteId(): number | null {
+  const idParam = Array.isArray(route.params.id)
+    ? route.params.id[0]
+    : route.params.id
 
-const parseJson = async (response: Response) => {
-  if (response.status === 204) return null;
+  if (
+    idParam === undefined ||
+    idParam === null ||
+    String(idParam).trim() === ''
+  ) {
+    return null
+  }
 
-  const text = await response.text();
-  return text ? JSON.parse(text) : null;
-};
+  const id = Number(idParam)
 
-const loadProcesso = async () => {
-  const id = route.params.id;
-  if (!id) return;
+  if (!Number.isFinite(id)) {
+    return null
+  }
 
-  loading.value = true;
-  erro.value = '';
-  notFound.value = false;
+  return id
+}
+
+/**
+ * Volta para a listagem.
+ */
+function redirectToListagem() {
+  void router.push('/processos')
+}
+
+/**
+ * Vai para o detalhe.
+ */
+function redirectToDetalhe(id: number | string) {
+  void router.push(`/processos/${id}`)
+}
+
+/**
+ * Faz o parse seguro da resposta da API.
+ */
+async function parseJson(
+  response: Response,
+): Promise<any> {
+  if (response.status === 204) {
+    return null
+  }
+
+  const text = await response.text()
+
+  if (!text) {
+    return null
+  }
 
   try {
-    const response = await fetch(`${processosUrl}/${id}`);
+    return JSON.parse(text)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Converte o status recebido da API para o tipo
+ * aceito pelo formulário.
+ */
+function normalizarStatus(
+  value: unknown,
+): StatusProcesso {
+  if (
+    value === 'CADASTRADO' ||
+    value === 'FINALIZADO' ||
+    value === 'CANCELADO'
+  ) {
+    return value
+  }
+
+  return 'CADASTRADO'
+}
+
+/**
+ * Carrega o processo para edição.
+ *
+ * IMPORTANTE:
+ * O ID usado para buscar o processo vem da URL.
+ *
+ * Exemplo:
+ * /processos/2/editar
+ *
+ * => GET /processo-seletivo/2
+ */
+async function loadProcesso() {
+  const id = getRouteId()
+
+  if (id === null) {
+    return
+  }
+
+  loading.value = true
+  erro.value = ''
+  notFound.value = false
+
+  try {
+    const response = await fetch(
+      `${processosUrl}/${id}`,
+    )
 
     if (!response.ok) {
       if (response.status === 404) {
-        notFound.value = true;
-        return;
+        notFound.value = true
+        return
       }
 
-      throw new Error('Não foi possível carregar o processo.');
+      throw new Error(
+        `Não foi possível carregar o processo. Status: ${response.status}`,
+      )
     }
 
-    const data = await parseJson(response);
-    processo.value = data;
+    const data = await parseJson(response)
 
-    if (currentMode.value === 'edit') {
-      setValues({
-        id: data.id,
-        nome: data.nome || '',
-        descricao: data.descricao || '',
-        qtdVagas: Number(data.qtdVagas ?? 0),
-        status: data.status || 'CADASTRADO'
-      });
+    if (!data) {
+      throw new Error(
+        'A API não retornou os dados do processo.',
+      )
     }
+
+    /**
+     * A API aparentemente usa "idd".
+     *
+     * Portanto:
+     * - data.id pode não existir
+     * - data.idd pode existir
+     *
+     * Mas para edição NÃO precisamos depender disso,
+     * pois o ID já está na URL.
+     */
+    const processoCarregado: Processo = {
+      id:
+        data.id !== undefined
+          ? Number(data.id)
+          : data.idd !== undefined
+            ? Number(data.idd)
+            : id,
+
+      idd:
+        data.idd !== undefined
+          ? Number(data.idd)
+          : id,
+
+      nome: data.nome ?? '',
+
+      descricao: data.descricao ?? '',
+
+      qtdVagas: Number(
+        data.qtdVagas ?? 0,
+      ),
+
+      status: normalizarStatus(
+        data.status,
+      ),
+    }
+
+    processo.value = processoCarregado
+
+    /**
+     * Preenche o formulário.
+     */
+    setValues({
+      id: id,
+
+      nome: processoCarregado.nome,
+
+      descricao:
+        processoCarregado.descricao ?? '',
+
+      qtdVagas:
+        processoCarregado.qtdVagas,
+
+      status:
+        processoCarregado.status,
+    })
   } catch (error) {
-    erro.value = error instanceof Error ? error.message : 'Erro ao carregar processo.';
+    console.error(
+      'Erro ao carregar processo seletivo:',
+      error,
+    )
+
+    erro.value =
+      error instanceof Error
+        ? error.message
+        : 'Erro ao carregar processo.'
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
-const submitForm = handleSubmit(async (values: any) => {
-  const payload = {
-    id: route.params.id ? Number(route.params.id) : undefined,
-    nome: values.nome,
-    descricao: values.descricao || '',
-    qtdVagas: Number(values.qtdVagas),
-    status: values.status
-  };
+/**
+ * Salva o formulário.
+ *
+ * CREATE:
+ * POST /processo-seletivo
+ *
+ * EDIT:
+ * PUT /processo-seletivo/:id
+ */
+const submitForm = handleSubmit(
+  async (values) => {
+    saving.value = true
+    erro.value = ''
 
-  saving.value = true;
-  erro.value = '';
+    try {
+      const routeId = getRouteId()
 
-  try {
-    const id = route.params.id;
-    const method = currentMode.value === 'edit' && id ? 'PUT' : 'POST';
-    const url = id && currentMode.value === 'edit' ? `${processosUrl}/${id}` : processosUrl;
+      const isEdit =
+        currentMode.value === 'edit' &&
+        routeId !== null
 
-    const response = await fetch(url, {
-      method,
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
+      /**
+       * No EDIT, o ID vem exclusivamente da rota.
+       *
+       * Não usamos data.id nem values.id para
+       * decidir qual registro será atualizado.
+       */
+      const payload = {
+        nome: values.nome.trim(),
 
-    const data = await parseJson(response);
+        descricao:
+          values.descricao?.trim() ?? '',
 
-    if (!response.ok) {
-      const message = data?.message || data?.error || 'Não foi possível salvar o processo.';
-      throw new Error(message);
+        qtdVagas:
+          Number(values.qtdVagas),
+
+        status:
+          values.status,
+      }
+
+      let url = processosUrl
+      let method: 'POST' | 'PUT' = 'POST'
+
+      if (isEdit) {
+        url = `${processosUrl}/${routeId}`
+        method = 'PUT'
+      }
+
+      console.log('SALVANDO PROCESSO:', {
+        method,
+        url,
+        payload,
+      })
+
+      const response = await fetch(url, {
+        method,
+
+        headers: {
+          'Content-Type': 'application/json',
+        },
+
+        body: JSON.stringify(payload),
+      })
+
+      const data = await parseJson(response)
+
+      if (!response.ok) {
+        const message =
+          data?.message ||
+          data?.error ||
+          `Não foi possível salvar o processo. Status: ${response.status}`
+
+        throw new Error(message)
+      }
+
+      /**
+       * Se estamos editando, o ID já é conhecido:
+       * routeId.
+       *
+       * Portanto não dependemos do backend devolver
+       * "id" na resposta.
+       */
+      if (isEdit && routeId !== null) {
+        console.log(
+          'Processo atualizado com ID:',
+          routeId,
+        )
+
+        redirectToDetalhe(routeId)
+        return
+      }
+
+      /**
+       * CREATE.
+       *
+       * O backend deve retornar o ID criado.
+       *
+       * Como sua API mostrou "idd", aceitamos:
+       * - id
+       * - idd
+       * - processoId
+       */
+      const savedId =
+        data?.id ??
+        data?.idd ??
+        data?.processoId
+
+      if (
+        savedId !== undefined &&
+        savedId !== null &&
+        String(savedId).trim() !== ''
+      ) {
+        redirectToDetalhe(savedId)
+        return
+      }
+
+      /**
+       * Se o POST não devolveu ID,
+       * volta para a listagem.
+       */
+      redirectToListagem()
+    } catch (error) {
+      console.error(
+        'Erro ao salvar processo:',
+        error,
+      )
+
+      erro.value =
+        error instanceof Error
+          ? error.message
+          : 'Erro ao salvar o processo.'
+    } finally {
+      saving.value = false
     }
+  },
+)
 
-    const savedId = data?.id || id || data?.processoId;
-    if (savedId) {
-      redirectToDetalhe(savedId);
-      return;
-    }
+/**
+ * Editar a partir da tela de detalhe.
+ */
+function editarDetalhe() {
+  const id = getRouteId()
 
-    redirectToListagem();
-  } catch (error) {
-    erro.value = (error instanceof Error ? error.message : String(error)) || 'Erro ao salvar o processo.';
-  } finally {
-    saving.value = false;
+  if (id === null) {
+    console.error(
+      'Não foi possível editar: ID inválido.',
+    )
+
+    return
   }
-});
 
-const isDetailMode = computed(() => currentMode.value === 'detail');
+  void router.push(
+    `/processos/${id}/editar`,
+  )
+}
 
+const isDetailMode = computed(
+  () => currentMode.value === 'detail',
+)
+
+/**
+ * Carrega quando a tela abre.
+ */
 onMounted(() => {
-  if (currentMode.value === 'edit' || currentMode.value === 'detail') {
-    loadProcesso();
+  if (
+    currentMode.value === 'edit' ||
+    currentMode.value === 'detail'
+  ) {
+    void loadProcesso()
   }
-});
+})
 
+/**
+ * Recarrega quando o ID da rota mudar.
+ */
 watch(
   () => route.params.id,
   () => {
-    if (currentMode.value === 'edit' || currentMode.value === 'detail') {
-      loadProcesso();
+    if (
+      currentMode.value === 'edit' ||
+      currentMode.value === 'detail'
+    ) {
+      void loadProcesso()
     }
-  }
-);
+  },
+)
 </script>
 
 <template>
   <section class="processo-view">
-    <div v-if="isDetailMode" class="detail-page">
+
+    <!-- ========================= -->
+    <!-- DETALHE -->
+    <!-- ========================= -->
+
+    <div
+      v-if="isDetailMode"
+      class="detail-page"
+    >
       <header class="page-header">
         <div>
-          <p class="eyebrow">Processo</p>
-          <h1>{{ processo?.nome || 'Detalhe do processo' }}</h1>
+          <p class="eyebrow">
+            Processo
+          </p>
+
+          <h1>
+            {{
+              processo?.nome ||
+              'Detalhe do processo'
+            }}
+          </h1>
         </div>
-        <v-button class="primary-button" type="button" @click="router.push(`/processos/${route.params.id}/editar?mode=edit`)">
+
+        <button
+          class="primary-button"
+          type="button"
+          @click="editarDetalhe"
+        >
           Editar
-        </v-button>
+        </button>
       </header>
 
-      <div v-if="loading" class="state-box">Carregando processo...</div>
-      <div v-else-if="notFound" class="state-box error-box">Processo não encontrado.</div>
-      <div v-else-if="erro" class="state-box error-box">{{ erro }}</div>
-      <div v-else-if="processo" class="detail-content">
+      <div
+        v-if="loading"
+        class="state-box"
+      >
+        Carregando processo...
+      </div>
+
+      <div
+        v-else-if="notFound"
+        class="state-box error-box"
+      >
+        Processo não encontrado.
+      </div>
+
+      <div
+        v-else-if="erro"
+        class="state-box error-box"
+      >
+        {{ erro }}
+      </div>
+
+      <div
+        v-else-if="processo"
+        class="detail-content"
+      >
         <div class="card-grid">
+
           <div class="info-card">
-            <span class="label">Nome</span>
-            <strong>{{ processo.nome }}</strong>
+            <span class="label">
+              Nome
+            </span>
+
+            <strong>
+              {{ processo.nome }}
+            </strong>
           </div>
 
           <div class="info-card">
-            <span class="label">Vagas</span>
-            <strong>{{ processo.qtdVagas }}</strong>
+            <span class="label">
+              Vagas
+            </span>
+
+            <strong>
+              {{ processo.qtdVagas }}
+            </strong>
           </div>
 
           <div class="info-card wide">
-            <span class="label">Status</span>
-            <strong>{{ formatStatus(processo.status) }}</strong>
+            <span class="label">
+              Status
+            </span>
+
+            <strong>
+              {{ formatStatus(processo.status) }}
+            </strong>
           </div>
 
-          <div class="info-card wide description-card">
-            <span class="label">Descrição</span>
-            <p>{{ processo.descricao || 'Sem descrição informada.' }}</p>
+          <div
+            class="info-card wide description-card"
+          >
+            <span class="label">
+              Descrição
+            </span>
+
+            <p>
+              {{
+                processo.descricao ||
+                'Sem descrição informada.'
+              }}
+            </p>
           </div>
+
         </div>
 
         <div class="baloes-panel">
-          <h2>Balões (D)</h2>
+          <h2>
+            Balões (D)
+          </h2>
+
           <div class="baloes-placeholder">
-            <div class="balao-slot">Reservado para balões</div>
-            <div class="balao-slot">Reservado para balões</div>
-            <div class="balao-slot">Reservado para balões</div>
+            <div class="balao-slot">
+              Reservado para balões
+            </div>
+
+            <div class="balao-slot">
+              Reservado para balões
+            </div>
+
+            <div class="balao-slot">
+              Reservado para balões
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div v-else class="form-page">
+    <!-- ========================= -->
+    <!-- FORMULÁRIO -->
+    <!-- ========================= -->
+
+    <div
+      v-else
+      class="form-page"
+    >
       <header class="page-header">
         <div>
-          <p class="eyebrow">Processo</p>
-          <h1>{{ currentMode === 'edit' ? 'Editar processo' : 'Novo processo' }}</h1>
+          <p class="eyebrow">
+            Processo
+          </p>
+
+          <h1>
+            {{
+              currentMode === 'edit'
+                ? 'Editar processo'
+                : 'Novo processo'
+            }}
+          </h1>
         </div>
       </header>
 
-      <form class="processo-form" @submit.prevent="submitForm">
+      <div
+        v-if="loading"
+        class="state-box"
+      >
+        Carregando processo...
+      </div>
+
+      <div
+        v-else-if="notFound"
+        class="state-box error-box"
+      >
+        Processo não encontrado.
+      </div>
+
+      <form
+        v-else
+        class="processo-form"
+        @submit.prevent="submitForm"
+      >
+
+        <!-- NOME -->
         <div class="field-group">
-          <label for="nome">Nome</label>
+          <label for="nome">
+            Nome
+          </label>
+
           <input
-  id="nome"
-  v-model="nome"
-  v-bind="nomeProps"
-  type="text"
-  placeholder="Digite o nome do processo"
-/>
-          <small v-if="errors.nome" class="error-message">{{ errors.nome }}</small>
+            id="nome"
+            v-model="nome"
+            v-bind="nomeProps"
+            type="text"
+            placeholder="Digite o nome do processo"
+          />
+
+          <small
+            v-if="errors.nome"
+            class="error-message"
+          >
+            {{ errors.nome }}
+          </small>
         </div>
 
+        <!-- DESCRIÇÃO -->
         <div class="field-group">
-          <label for="descricao">Descrição</label>
-          <textarea id="descricao" v-model="descricao" v-bind="descricaoProps" rows="4" placeholder="Descreva o processo" />
-          <small v-if="errors.descricao" class="error-message">{{ errors.descricao }}</small>
+          <label for="descricao">
+            Descrição
+          </label>
+
+          <textarea
+            id="descricao"
+            v-model="descricao"
+            v-bind="descricaoProps"
+            rows="4"
+            placeholder="Descreva o processo"
+          ></textarea>
+
+          <small
+            v-if="errors.descricao"
+            class="error-message"
+          >
+            {{ errors.descricao }}
+          </small>
         </div>
 
+        <!-- VAGAS / STATUS -->
         <div class="field-row">
+
           <div class="field-group">
-            <label for="qtdVagas">Quantidade de vagas</label>
-            <input id="qtdVagas" v-model.number="qtdVagas" v-bind="qtdVagasProps" type="number" min="0" />
-            <small v-if="errors.qtdVagas" class="error-message">{{ errors.qtdVagas }}</small>
+            <label for="qtdVagas">
+              Quantidade de vagas
+            </label>
+
+            <input
+              id="qtdVagas"
+              v-model.number="qtdVagas"
+              v-bind="qtdVagasProps"
+              type="number"
+              min="0"
+            />
+
+            <small
+              v-if="errors.qtdVagas"
+              class="error-message"
+            >
+              {{ errors.qtdVagas }}
+            </small>
           </div>
 
           <div class="field-group">
-            <label for="status">Status</label>
-            <select id="status" v-model="status" v-bind="statusProps">
-              <option v-for="option in STATUS_OPTIONS" :key="option" :value="option">
+            <label for="status">
+              Status
+            </label>
+
+            <select
+              id="status"
+              v-model="status"
+              v-bind="statusProps"
+            >
+              <option
+                v-for="option in STATUS_OPTIONS"
+                :key="option"
+                :value="option"
+              >
                 {{ formatStatus(option) }}
               </option>
             </select>
-            <small v-if="errors.status" class="error-message">{{ errors.status }}</small>
+
+            <small
+              v-if="errors.status"
+              class="error-message"
+            >
+              {{ errors.status }}
+            </small>
           </div>
+
         </div>
 
-        <div v-if="erro" class="form-alert error-box">{{ erro }}</div>
+        <!-- ERRO -->
+        <div
+          v-if="erro"
+          class="form-alert error-box"
+        >
+          {{ erro }}
+        </div>
 
+        <!-- AÇÕES -->
         <div class="actions">
-          <button type="button" class="secondary-button" @click="redirectToListagem">
+
+          <button
+            type="button"
+            class="secondary-button"
+            @click="redirectToListagem"
+          >
             Cancelar
           </button>
-          <button type="submit" class="primary-button" :disabled="saving">
-            {{ saving ? 'Salvando...' : currentMode === 'edit' ? 'Salvar alterações' : 'Criar processo' }}
+
+          <button
+            type="submit"
+            class="primary-button"
+            :disabled="saving"
+          >
+            {{
+              saving
+                ? 'Salvando...'
+                : currentMode === 'edit'
+                  ? 'Salvar alterações'
+                  : 'Criar processo'
+            }}
           </button>
-  
+
         </div>
+
       </form>
     </div>
   </section>
@@ -505,16 +1033,19 @@ textarea {
 }
 
 @media (max-width: 640px) {
-  .page-header,
+  .page-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .field-row,
   .card-grid,
   .baloes-placeholder {
     grid-template-columns: 1fr;
-    display: grid;
   }
 
-  .page-header {
-    align-items: flex-start;
+  .info-card.wide {
+    grid-column: span 1;
   }
 
   .actions {
