@@ -5,6 +5,8 @@ import { useRoute, useRouter } from 'vue-router'
 import ProcessoSeletivoService from '../../repositories/ProcessoSeletivoService'
 import type { ProcessoSeletivo } from '../../types/ProcessoSeletivo'
 
+import BaloesDoProcesso from '../../components/BaloesDoProcesso.vue'
+
 const route = useRoute()
 const router = useRouter()
 
@@ -427,19 +429,9 @@ watch(
         <v-divider />
 
         <v-card-text class="pa-4">
-          <v-alert
-            type="info"
-            variant="tonal"
-            icon="mdi-information"
-          >
-            Área reservada para a listagem e criação
-            de balões informativos.
 
-            <span class="d-block mt-2">
-              Processo ID:
-              <code>{{ processo.id }}</code>
-            </span>
-          </v-alert>
+          <BaloesDoProcesso :processoId="processo.id!" />
+
         </v-card-text>
       </v-card>
     </template>
