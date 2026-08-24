@@ -1,13 +1,11 @@
 package ufc.npi.pslite.controller;
 
 import jakarta.validation.Valid;
-import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ufc.npi.pslite.model.BalaoInformativo;
 import ufc.npi.pslite.service.BalaoInformativoService;
-import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 

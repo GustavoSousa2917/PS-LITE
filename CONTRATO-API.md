@@ -259,3 +259,189 @@ Utilizado quando o processo seletivo solicitado não existe.
 "error": "Not Found",
 "detail": "Processo seletivo não encontrado"
 }
+
+
+Balão Informativo
+Base URL:
+http://localhost:8080
+
+Swagger UI:
+http://localhost:8080/swagger-ui/index.html
+
+GET /balao-informativo/por-processo/{idProcesso}
+
+Resposta — 200 OK
+
+[
+{
+"id": 1,
+"titulo": "Prazo de Inscrição",
+"mensagem": "As inscrições vão até sexta-feira às 23:59.",
+"processoSeletivo": {
+"id": 1,
+"nome": "Processo Seletivo 2026",
+"descricao": "Processo para seleção de alunos",
+"qtdVagas": 20,
+"status": "CADASTRADO"
+}
+}
+]
+
+Processo não encontrado — 404 Not Found
+json
+
+
+{
+"error": "Not Found",
+"detail": "Processo seletivo não encontrado com o ID: 99"
+}
+
+GET /balao-informativo/{id}
+Busca um balão informativo pelo seu ID.
+
+Resposta — 200 OK
+json
+
+
+{
+"id": 1,
+"titulo": "Prazo de Inscrição",
+"mensagem": "As inscrições vão até sexta-feira às 23:59.",
+"processoSeletivo": {
+"id": 1,
+"nome": "Processo Seletivo 2026",
+"descricao": "Processo para seleção de alunos",
+"qtdVagas": 20,
+"status": "CADASTRADO"
+}
+}
+Balão não encontrado — 404 Not Found
+json
+
+
+{
+"error": "Not Found",
+"detail": "Balão informativo não encontrado"
+}
+
+POST /balao-informativo
+Cria um novo balão informativo vinculado a um processo seletivo existente.
+
+Request Body
+json
+
+
+{
+"titulo": "Prazo de Inscrição",
+"mensagem": "As inscrições vão até sexta-feira às 23:59.",
+"processoSeletivo": {
+"id": 1
+}
+}
+Resposta — 201 Created
+json
+
+
+{
+"id": 1,
+"titulo": "Prazo de Inscrição",
+"mensagem": "As inscrições vão até sexta-feira às 23:59.",
+"processoSeletivo": {
+"id": 1,
+"nome": "Processo Seletivo 2026",
+"descricao": "Processo para seleção de alunos",
+"qtdVagas": 20,
+"status": "CADASTRADO"
+}
+}
+Erro de Validação — 400 Bad Request
+Exemplo de envio inválido:
+
+json
+
+
+{
+"titulo": "",
+"mensagem": "",
+"processoSeletivo": null
+}
+Resposta:
+
+json
+
+
+{
+"error": "Bad Request",
+"detail": "Erro de validação",
+"messages": [
+"titulo: não deve estar em branco",
+"mensagem: não deve estar em branco",
+"processoSeletivo: Processo seletivo é obrigatório"
+]
+}
+Processo Inexistente — 404 Not Found
+Disparado quando o id do processo seletivo informado no corpo não existe no banco de dados.
+
+json
+
+
+{
+"error": "Not Found",
+"detail": "Processo seletivo não encontrado com o ID: 99"
+}
+
+PUT /balao-informativo/{id}
+
+Atualiza os dados de um balão informativo existente (título e mensagem).
+
+Request Body
+json
+
+
+{
+"titulo": "Prazo Prorrogado",
+"mensagem": "As inscrições foram prorrogadas até domingo.",
+"processoSeletivo": {
+"id": 1
+}
+}
+Resposta — 200 OK
+json
+
+
+{
+"id": 1,
+"titulo": "Prazo Prorrogado",
+"mensagem": "As inscrições foram prorrogadas até domingo.",
+"processoSeletivo": {
+"id": 1,
+"nome": "Processo Seletivo 2026",
+"descricao": "Processo para seleção de alunos",
+"qtdVagas": 20,
+"status": "CADASTRADO"
+}
+}
+Balão não encontrado — 404 Not Found
+json
+
+
+{
+"error": "Not Found",
+"detail": "Balão informativo não encontrado"
+}
+
+DELETE /balao-informativo/{id}
+
+Remove um balão informativo pelo ID.
+
+Resposta — 204 No Content
+(Sem corpo de resposta)
+
+Balão não encontrado — 404 Not Found
+json
+
+
+{
+"error": "Not Found",
+"detail": "Balão informativo não encontrado"
+}
