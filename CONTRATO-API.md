@@ -153,7 +153,7 @@ Atualiza um processo seletivo existente.
 }
 ```
 
-O `id` utilizado na atualização é o informado na URL.
+O identificador utilizado na atualização é exclusivamente o valor de `{id}` informado na URL. O campo `id` **não deve ser enviado no corpo** da requisição.
 
 ### Processo não encontrado — 404 Not Found
 
@@ -193,13 +193,13 @@ Sem corpo de resposta.
 
 ## Modelo ProcessoSeletivo
 
-| Campo | Tipo | Obrigatório | Regra |
+| Campo | Tipo | Request | Regra |
 |---|---|---|---|
-| id | Long | Não | Gerado pelo sistema |
-| nome | String | Sim | Não pode estar em branco |
+| id | Long | Não | Gerado pelo sistema e retornado pela API |
+| nome | String | Sim | Obrigatório; não pode estar em branco |
 | descricao | String | Não | Opcional |
-| qtdVagas | Integer | Não | Maior ou igual a 0; default 0 |
-| status | String | Não | Default `CADASTRADO` |
+| qtdVagas | Integer | Não | Se omitido, assume `0`; se informado, deve ser ≥ 0 e não pode ser `null` |
+| status | String/Enum | Não | Se omitido, assume `CADASTRADO`; se informado, deve ser `CADASTRADO`, `FINALIZADO` ou `CANCELADO` e não pode ser `null` |
 
 ### Status disponíveis
 
@@ -210,6 +210,12 @@ CANCELADO
 ```
 
 ---
+
+## Regras de validação
+
+- `nome`: obrigatório e não pode estar em branco.
+- `qtdVagas`: opcional no request; quando omitido, assume `0`. Quando informado, não pode ser `null` e deve ser maior ou igual a `0`.
+- `status`: opcional no request; quando omitido, assume `CADASTRADO`. Quando informado, não pode ser `null` e deve ser um dos valores `CADASTRADO`, `FINALIZADO` ou `CANCELADO`.
 
 # Formato de erros
 
