@@ -17,6 +17,14 @@ const excluindoId = ref<ProcessoSeletivo['id'] | null>(null)
 /**
  * Carrega todos os processos seletivos.
  */
+
+ function normalizarProcesso(processo: ProcessoSeletivo): ProcessoSeletivo {
+  return {
+    ...processo,
+    id: processo.id ?? processo.idd,
+  }
+}
+
 async function carregarProcessos() {
   loading.value = true
   error.value = false
@@ -38,13 +46,13 @@ async function carregarProcessos() {
      * - um array diretamente
      * - ou um objeto paginado contendo "content"
      */
-    if (Array.isArray(data)) {
-      processos.value = data
-    } else if (Array.isArray(data?.content)) {
-      processos.value = data.content
-    } else {
-      processos.value = []
-    }
+   if (Array.isArray(data)) {
+  processos.value = data.map(normalizarProcesso)
+} else if (Array.isArray(data?.content)) {
+  processos.value = data.content.map(normalizarProcesso)
+} else {
+  processos.value = []
+}
   } catch (err) {
     console.error('Erro ao carregar processos seletivos:', err)
     error.value = true
