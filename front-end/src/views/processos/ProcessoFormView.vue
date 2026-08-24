@@ -13,7 +13,7 @@ const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 const processosUrl = `${apiBaseUrl}/processo-seletivo`;
 
 interface Processo {
-  id?: null;
+  id?: number| string | undefined;
   nome: string;
   descricao?: string | null;
   qtdVagas: number;
@@ -35,6 +35,7 @@ const currentMode = computed(() => {
 
 const schema = toTypedSchema(
   z.object({
+    id: z.number().optional(),
     nome: z.string().trim().min(1, 'Nome é obrigatório.'),
     descricao: z.string().trim().optional().default(''),
     qtdVagas: z.coerce.number({ invalid_type_error: 'Quantidade de vagas é obrigatória.' }).min(0, 'Quantidade de vagas deve ser maior ou igual a 0.'),
@@ -54,6 +55,7 @@ const {
   validationSchema: schema,
 
  initialValues: {
+  id: undefined,
   nome: '',
   descricao: '',
   qtdVagas: 0,
@@ -115,6 +117,7 @@ const loadProcesso = async () => {
 
     if (currentMode.value === 'edit') {
       setValues({
+        id: data.id,
         nome: data.nome || '',
         descricao: data.descricao || '',
         qtdVagas: Number(data.qtdVagas ?? 0),
@@ -130,6 +133,7 @@ const loadProcesso = async () => {
 
 const submitForm = handleSubmit(async (values: any) => {
   const payload = {
+    id: route.params.id ? Number(route.params.id) : undefined,
     nome: values.nome,
     descricao: values.descricao || '',
     qtdVagas: Number(values.qtdVagas),
@@ -295,6 +299,7 @@ watch(
           <button type="submit" class="primary-button" :disabled="saving">
             {{ saving ? 'Salvando...' : currentMode === 'edit' ? 'Salvar alterações' : 'Criar processo' }}
           </button>
+  
         </div>
       </form>
     </div>
