@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { BalaoInformativoService } from '../../repositories/BalaoInformativoService';
-import type { BalaoInformativo } from '../../types/BalaoInformativo';
+import { BalaoInformativoService } from '../repositories/BalaoInformativoService';
+import type { BalaoInformativo } from '../types/BalaoInformativo';
 
 // Importações novas para Validação
 import { useForm, useField } from 'vee-validate';
