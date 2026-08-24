@@ -2,6 +2,7 @@ package ufc.npi.pslite.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -12,9 +13,7 @@ import java.util.List;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNotFound(
-            NotFoundException exception) {
-
+    public ResponseEntity<ErrorResponse> handleNotFound(NotFoundException exception) {
         ErrorResponse error = new ErrorResponse(
                 "Not Found",
                 exception.getMessage()
@@ -26,9 +25,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidation(
-            MethodArgumentNotValidException exception) {
-
+    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException exception) {
         List<String> messages = exception.getBindingResult()
                 .getFieldErrors()
                 .stream()
@@ -45,12 +42,26 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(error);
     }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleMalformedRequest(HttpMessageNotReadableException exception) {
+        ErrorResponse error = new ErrorResponse(
+                "Bad Request",
+                "Corpo da requisição inválido"
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(error);
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException exception) {
         ErrorResponse error = new ErrorResponse(
                 "Bad Request",
                 exception.getMessage()
         );
+
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(error);
