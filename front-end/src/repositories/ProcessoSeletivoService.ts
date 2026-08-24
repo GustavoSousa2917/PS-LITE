@@ -2,6 +2,9 @@ import HttpClient from './adapters/HttpClient'
 import type { ProcessoSeletivo } from '../types/ProcessoSeletivo'
 
 class ProcessoSeletivoService {
+  getAll() {
+      throw new Error('Method not implemented.')
+  }
   async list(): Promise<ProcessoSeletivo[]> {
     const response = await HttpClient.get('/processo-seletivo')
     if (response.data && Array.isArray(response.data.content)) {
