@@ -200,7 +200,6 @@ onMounted(() => {
   <section class="listagem-view">
     <header class="page-header">
       <div>
-        <p class="eyebrow">Processos</p>
 
         <h1>Processos seletivos</h1>
 
@@ -371,6 +370,8 @@ onMounted(() => {
 </template>
 
 <style scoped>
+
+
 .listagem-view {
   width: 100%;
 }
@@ -381,6 +382,7 @@ onMounted(() => {
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 24px;
+
 }
 
 .eyebrow {

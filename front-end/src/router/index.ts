@@ -6,7 +6,8 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/HomeView'
+      redirect: 'Processos'
+      
     },
     {
       path: '/processos',

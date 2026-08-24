@@ -835,6 +835,9 @@ watch(
 </template>
 
 <style scoped>
+template {
+  background-color: white;
+}
 .processo-view {
   width: 100%;
   max-width: 960px;
