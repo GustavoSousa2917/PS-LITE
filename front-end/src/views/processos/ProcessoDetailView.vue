@@ -5,6 +5,8 @@ import { useRoute, useRouter } from 'vue-router'
 import ProcessoSeletivoService from '../../repositories/ProcessoSeletivoService'
 import type { ProcessoSeletivo } from '../../types/ProcessoSeletivo'
 
+import BaloesDoProcesso from '../../components/BaloesDoProcesso.vue'
+
 const route = useRoute()
 const router = useRouter()
 
@@ -324,6 +326,7 @@ watch(
       <v-card
         variant="outlined"
         class="mb-6"
+        style="border-color: #a8a8a8;"
       >
         <v-card-item>
 
@@ -338,7 +341,7 @@ watch(
               cols="12"
               md="6"
             >
-             
+
             </v-col>
 
             <!-- VAGAS -->
@@ -405,7 +408,7 @@ watch(
       <!-- BALÕES DO DEV D                         -->
       <!-- ========================================= -->
 
-      <v-card variant="outlined">
+      <v-card variant="outlined" style="border-color: #a8a8a8;">
         <v-card-title
           class="d-flex align-center justify-space-between pa-4"
         >
@@ -418,26 +421,16 @@ watch(
             color="secondary"
             variant="outlined"
           >
-            Área do Dev D
+            Avisos
           </v-chip>
         </v-card-title>
 
         <v-divider />
 
         <v-card-text class="pa-4">
-          <v-alert
-            type="info"
-            variant="tonal"
-            icon="mdi-information"
-          >
-            Área reservada para a listagem e criação
-            de balões informativos.
 
-            <span class="d-block mt-2">
-              Processo ID:
-              <code>{{ processo.id }}</code>
-            </span>
-          </v-alert>
+          <BaloesDoProcesso :processoId="processo.id!" />
+
         </v-card-text>
       </v-card>
     </template>
@@ -911,5 +904,5 @@ watch(
     justify-content: center;
   }
 }
-  
+
 </style>
