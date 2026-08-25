@@ -8,7 +8,9 @@ import Appbar from './components/Appbar.vue'
   <v-app>
     <Appbar />
     <v-main class="bg-grey-lighten-4">
-      <router-view />
+      <v-container>
+        <router-view />
+      </v-container>
     </v-main>
   </v-app>
 </template>

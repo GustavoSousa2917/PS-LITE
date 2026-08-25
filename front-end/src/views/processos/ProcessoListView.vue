@@ -311,7 +311,7 @@ onMounted(() => {
               <div class="actions-group">
                 <!-- VISUALIZAR -->
                 <button
-                  class="icon-button"
+                  class="icon-button icon-button--view"
                   type="button"
                   :disabled="!temId(processo.id)"
                   :title="
@@ -475,6 +475,14 @@ tbody tr:last-child td {
 .icon-button {
   background: #f3f4f6;
   color: #111827;
+}
+
+.icon-button--view {
+  background: #dbeafe; /* Azul clarinho do badge */
+  color: #1d4ed8;      /* Texto azul escuro */
+}
+.icon-button--view:hover {
+  background: #bfdbfe; /* Escurece de leve ao passar o mouse */
 }
 
 .icon-button--danger {
