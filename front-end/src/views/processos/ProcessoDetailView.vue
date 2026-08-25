@@ -251,11 +251,7 @@ watch(
       class="d-flex align-center justify-space-between mb-6"
     >
       <div>
-        <p
-          class="text-caption text-uppercase text-grey-darken-1 mb-1"
-        >
-          Processo
-        </p>
+
 
         <h1 class="text-h4 font-weight-bold">
           {{
@@ -266,23 +262,24 @@ watch(
       </div>
 
       <div class="d-flex ga-2">
-        <v-btn
-          variant="outlined"
+        <button
+          class="processo-button processo-button--outlined"
           type="button"
           @click="voltar"
         >
           Voltar
-        </v-btn>
+        </button>
 
-        <v-btn
+        <button
           v-if="processo"
+          class="processo-button"
           color="primary"
-          prepend-icon="mdi-pencil"
           type="button"
           @click="editar"
         >
+          <span class="processo-button-icon" aria-hidden="true">✎</span>
           Editar
-        </v-btn>
+        </button>
       </div>
     </div>
 
@@ -311,12 +308,13 @@ watch(
       processo seletivo.
 
       <template #append>
-        <v-btn
-          variant="text"
+        <button
+          class="processo-button processo-button--text"
+          type="button"
           @click="carregarProcesso"
         >
           Tentar novamente
-        </v-btn>
+        </button>
       </template>
     </v-alert>
 
@@ -457,6 +455,9 @@ watch(
 
 .processo-detail-view {
   width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 8px 0 32px;
 }
 
 :deep(.v-btn) {
@@ -466,6 +467,20 @@ watch(
   font-weight: 600;
   letter-spacing: normal;
   text-transform: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease,
+    box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+:deep(.v-btn:not(.v-btn--variant-outlined)) {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  box-shadow: 0 2px 5px rgb(29 78 216 / 18%);
+}
+
+:deep(.v-btn:not(.v-btn--variant-outlined):hover) {
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  box-shadow: 0 5px 12px rgb(29 78 216 / 25%);
+  transform: translateY(-1px);
 }
 
 :deep(.v-btn--variant-outlined) {
@@ -478,6 +493,11 @@ watch(
   background: #f9fafb;
 }
 
+:deep(.v-btn:focus-visible) {
+  outline: 3px solid rgb(37 99 235 / 30%);
+  outline-offset: 2px;
+}
+
 /* =========================================================
    CABEÇALHO
    ========================================================= */
@@ -488,6 +508,7 @@ watch(
   justify-content: space-between;
   gap: 24px;
   margin-bottom: 24px;
+  padding: 0 4px;
 }
 
 .processo-header-content {
@@ -537,6 +558,7 @@ watch(
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
+  box-shadow: 0 4px 16px rgb(15 23 42 / 5%);
 
   overflow: hidden;
 }
@@ -595,6 +617,14 @@ watch(
 
   border: 1px solid #e5e7eb;
   border-radius: 10px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.processo-info:hover {
+  border-color: #bfdbfe;
+  box-shadow: 0 4px 12px rgb(15 23 42 / 6%);
+  transform: translateY(-1px);
 }
 
 .processo-info--wide {
@@ -633,6 +663,16 @@ watch(
 
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+.processo-button{
+  border: 0;
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #e5e7eb;
+  color: #111827;
 }
 
 /* =========================================================
@@ -711,6 +751,7 @@ watch(
 
   border: 1px solid #e5e7eb;
   border-radius: 12px;
+  box-shadow: 0 4px 16px rgb(15 23 42 / 5%);
 
   overflow: hidden;
 }
@@ -773,6 +814,12 @@ watch(
   color: #64748b;
 
   text-align: center;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.balao-slot:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
 }
 
 /* =========================================================
@@ -794,6 +841,10 @@ watch(
    ========================================================= */
 
 @media (max-width: 768px) {
+  .processo-detail-view {
+    padding-inline: 12px;
+  }
+
   .processo-header {
     align-items: flex-start;
     flex-direction: column;
@@ -825,6 +876,10 @@ watch(
 }
 
 @media (max-width: 480px) {
+  .processo-detail-view {
+    padding-inline: 8px;
+  }
+
   .processo-title {
     font-size: 24px;
   }

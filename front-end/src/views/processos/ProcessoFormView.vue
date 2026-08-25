@@ -663,9 +663,7 @@ watch(
     >
       <header class="page-header">
         <div>
-          <p class="eyebrow">
-            Processo
-          </p>
+         
 
           <h1>
             {{
