@@ -175,22 +175,24 @@ async function deletarBalao(id?: number) {
             <div class="text-subtitle-1 font-weight-bold text-blue-darken-4">{{ balao.titulo }}</div>
             <div class="text-body-2 mt-1 text-blue-darken-3">{{ balao.mensagem }}</div>
           </div>
-          <div class="d-flex align-center ml-4">
+          <div class="d-flex align-center ml-4 gap-1">
             <v-btn
                 icon="mdi-pencil"
                 variant="text"
                 size="small"
-                color="blue-darken-3"
+                color="blue-darken-2"
                 class="mr-1"
+                title="Editar balão"
                 @click="abrirEdicao(balao)"
             ></v-btn>
-            <v-btn
-                icon="mdi-delete"
-                variant="text"
-                size="small"
-                color="error"
+            <button
+                type="button"
+                class="custom-delete-btn"
+                title="Excluir balão"
                 @click="deletarBalao(balao.id)"
-            ></v-btn>
+            >
+              <v-icon icon="mdi-delete" size="small"></v-icon>
+            </button>
           </div>
         </div>
       </v-alert>
@@ -201,4 +203,24 @@ async function deletarBalao(id?: number) {
 <style scoped>
 .gap-1 { gap: 4px; }
 .gap-3 { gap: 12px; }
+
+
+.custom-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 4px;
+  background-color: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.custom-delete-btn:hover {
+  color: #dc2626;
+  background-color: rgba(220, 38, 38, 0.08);
+}
 </style>
