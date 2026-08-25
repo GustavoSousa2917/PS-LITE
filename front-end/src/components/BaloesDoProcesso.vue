@@ -2,8 +2,6 @@
 import { ref, onMounted } from 'vue';
 import { BalaoInformativoService } from '../repositories/BalaoInformativoService';
 import type { BalaoInformativo } from '../types/BalaoInformativo';
-
-// Importações novas para Validação
 import { useForm, useField } from 'vee-validate';
 import { toTypedSchema } from '@vee-validate/zod';
 import * as z from 'zod';
@@ -14,11 +12,9 @@ const props = defineProps<{
 
 const baloes = ref<BalaoInformativo[]>([]);
 const isLoading = ref(true);
-
-// 1. Variável para abrir/fechar o formulário
 const isFormVisible = ref(false);
+const balaoEditandoId = ref<number | null>(null);
 
-// 2. Criar as regras de validação (Zod)
 const validationSchema = toTypedSchema(
     z.object({
       titulo: z.string().min(1, 'O título é obrigatório'),
@@ -26,20 +22,14 @@ const validationSchema = toTypedSchema(
     })
 );
 
-// 3. Configurar o formulário (Vee-Validate)
-const { handleSubmit, resetForm, isSubmitting } = useForm({
-  validationSchema,
-});
-
-// Ligar os campos às variáveis
+const { handleSubmit, resetForm, isSubmitting } = useForm({ validationSchema });
 const { value: titulo, errorMessage: tituloError } = useField<string>('titulo');
 const { value: mensagem, errorMessage: mensagemError } = useField<string>('mensagem');
 
 onMounted(async () => {
-  carregarBaloes();
+  await carregarBaloes();
 });
 
-// Função separada para recarregar a lista facilmente
 async function carregarBaloes() {
   try {
     isLoading.value = true;
@@ -51,72 +41,176 @@ async function carregarBaloes() {
   }
 }
 
-// 4. Ação de Salvar o Balão
+// Prepara o formulário para edição
+function abrirEdicao(balao: BalaoInformativo) {
+  balaoEditandoId.value = balao.id || null;
+  titulo.value = balao.titulo;
+  mensagem.value = balao.mensagem;
+  isFormVisible.value = true;
+}
+
+// Cancela e limpa o formulário
+function cancelarFormulario() {
+  resetForm();
+  balaoEditandoId.value = null;
+  isFormVisible.value = false;
+}
+
 const onSubmit = handleSubmit(async (values) => {
   try {
-    // Monta o objeto no formato do contrato
-    const novoBalao: BalaoInformativo = {
+    const payload: BalaoInformativo = {
       titulo: values.titulo,
       mensagem: values.mensagem,
       processoSeletivo: { id: props.processoId }
     };
 
-    // Envia para o service
-    await BalaoInformativoService.create(novoBalao);
+    if (balaoEditandoId.value) {
+      await BalaoInformativoService.update(balaoEditandoId.value, payload);
+    } else {
+      await BalaoInformativoService.create(payload);
+    }
 
-    // Limpa o form, fecha a tela e recarrega a lista
-    resetForm();
-    isFormVisible.value = false;
+    cancelarFormulario();
     await carregarBaloes();
-
   } catch (error) {
     console.error("Erro ao salvar balão", error);
   }
 });
+
+// Ação de Deletar
+async function deletarBalao(id?: number) {
+  if (!id) return;
+  const confirmado = confirm('Tem certeza que deseja excluir este balão informativo?');
+  if (!confirmado) return;
+
+  try {
+    await BalaoInformativoService.delete(id);
+    await carregarBaloes();
+  } catch (error) {
+    console.error("Erro ao deletar balão:", error);
+    alert('Erro ao excluir o balão. Verifique o console.');
+  }
+}
 </script>
 
 <template>
-  <v-card class="mt-4" variant="outlined">
-    <v-card-title class="d-flex justify-space-between align-center">
-      Balões Informativos
-      <!-- Botão para abrir o formulário -->
-      <v-btn color="primary" @click="isFormVisible = !isFormVisible">
-        {{ isFormVisible ? 'Cancelar' : 'Novo Balão' }}
+  <div>
+    <!-- Cabeçalho e Botão Novo -->
+    <div class="d-flex justify-space-between align-center mb-4">
+      <h3 class="text-h6 font-weight-bold text-grey-darken-3 mb-0">Avisos do Processo</h3>
+      <v-btn
+          v-if="!isFormVisible"
+          color="primary"
+          prepend-icon="mdi-plus"
+          variant="flat"
+          @click="isFormVisible = true"
+      >
+        Novo Balão
       </v-btn>
-    </v-card-title>
+    </div>
 
-    <v-card-text>
-      <!-- Formulário de Criação -->
-      <v-form v-if="isFormVisible" @submit.prevent="onSubmit" class="mb-4">
+    <!-- Formulário Dinâmico (Criar/Editar) -->
+    <v-card v-if="isFormVisible" variant="outlined" class="pa-5 mb-6 bg-grey-lighten-4 border-sm">
+      <h4 class="text-subtitle-1 font-weight-bold mb-4">
+        {{ balaoEditandoId ? 'Editar Balão' : 'Criar Novo Balão' }}
+      </h4>
+      <v-form @submit.prevent="onSubmit">
         <v-text-field
             v-model="titulo"
-            label="Título do Balão"
             :error-messages="tituloError"
+            label="Título do Balão"
+            variant="outlined"
+            color="primary"
+            density="comfortable"
+            bg-color="white"
         ></v-text-field>
 
         <v-textarea
             v-model="mensagem"
-            label="Mensagem"
             :error-messages="mensagemError"
+            label="Mensagem"
+            variant="outlined"
+            color="primary"
+            density="comfortable"
             rows="3"
+            bg-color="white"
         ></v-textarea>
 
-        <v-btn type="submit" color="success" :loading="isSubmitting">
-          Salvar
-        </v-btn>
+        <div class="d-flex justify-end mt-2">
+          <v-btn
+              variant="text"
+              color="grey-darken-2"
+              class="mr-3"
+              @click="cancelarFormulario"
+          >
+            Cancelar
+          </v-btn>
+          <v-btn
+              type="submit"
+              color="primary"
+              variant="flat"
+              :loading="isSubmitting"
+          >
+            Salvar
+          </v-btn>
+        </div>
       </v-form>
+    </v-card>
 
-      <v-divider v-if="isFormVisible" class="my-4"></v-divider>
+    <!-- Estados da Lista -->
+    <div v-if="isLoading" class="d-flex justify-center py-6">
+      <v-progress-circular indeterminate color="primary"></v-progress-circular>
+    </div>
 
-      <!-- Lista de Balões (Igual ao anterior) -->
-      <div v-if="isLoading" class="text-center">Carregando balões...</div>
-      <div v-else-if="baloes.length === 0" class="text-center text-grey">Nenhum balão.</div>
-      <v-list v-else>
-        <v-list-item v-for="balao in baloes" :key="balao.id">
-          <v-list-item-title class="font-weight-bold">{{ balao.titulo }}</v-list-item-title>
-          <v-list-item-subtitle>{{ balao.mensagem }}</v-list-item-subtitle>
-        </v-list-item>
-      </v-list>
-    </v-card-text>
-  </v-card>
+    <v-alert
+        v-else-if="baloes.length === 0"
+        type="info"
+        variant="tonal"
+        class="mt-4"
+    >
+      Nenhum balão informativo cadastrado para este processo.
+    </v-alert>
+
+    <!-- Lista de Balões -->
+    <div v-else class="mt-4 d-flex flex-column gap-3">
+      <v-card
+          v-for="balao in baloes"
+          :key="balao.id"
+          variant="outlined"
+          class="border-sm"
+      >
+        <v-card-item>
+          <template v-slot:title>
+            <span class="text-subtitle-1 font-weight-bold text-primary">{{ balao.titulo }}</span>
+          </template>
+          <template v-slot:append>
+            <div class="d-flex gap-1">
+              <v-btn
+                  icon="mdi-pencil"
+                  variant="text"
+                  size="small"
+                  color="grey-darken-1"
+                  @click="abrirEdicao(balao)"
+              ></v-btn>
+              <v-btn
+                  icon="mdi-delete"
+                  variant="text"
+                  size="small"
+                  color="error"
+                  @click="deletarBalao(balao.id)"
+              ></v-btn>
+            </div>
+          </template>
+        </v-card-item>
+        <v-card-text class="text-body-1 text-grey-darken-3 pt-2">
+          {{ balao.mensagem }}
+        </v-card-text>
+      </v-card>
+    </div>
+  </div>
 </template>
+
+<style scoped>
+.gap-1 { gap: 4px; }
+.gap-3 { gap: 12px; }
+</style>
