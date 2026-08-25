@@ -95,9 +95,8 @@ async function deletarBalao(id?: number) {
 
 <template>
   <div>
-    <!-- Cabeçalho e Botão Novo -->
-    <div class="d-flex justify-space-between align-center mb-4">
-      <h3 class="text-h6 font-weight-bold text-grey-darken-3 mb-0">Avisos do Processo</h3>
+    <!-- Botão Novo (Alinhado à direita, sem o título redundante) -->
+    <div class="d-flex justify-end mb-4">
       <v-btn
           v-if="!isFormVisible"
           color="primary"
@@ -109,8 +108,8 @@ async function deletarBalao(id?: number) {
       </v-btn>
     </div>
 
-    <!-- Formulário Dinâmico (Criar/Editar) -->
-    <v-card v-if="isFormVisible" variant="outlined" class="pa-5 mb-6 bg-grey-lighten-4 border-sm">
+    <!-- Formulário Dinâmico -->
+    <v-card v-if="isFormVisible" variant="outlined" class="pa-5 mb-6 bg-grey-lighten-4" style="border-color: #e5e7eb;">
       <h4 class="text-subtitle-1 font-weight-bold mb-4">
         {{ balaoEditandoId ? 'Editar Balão' : 'Criar Novo Balão' }}
       </h4>
@@ -137,20 +136,10 @@ async function deletarBalao(id?: number) {
         ></v-textarea>
 
         <div class="d-flex justify-end mt-2">
-          <v-btn
-              variant="text"
-              color="grey-darken-2"
-              class="mr-3"
-              @click="cancelarFormulario"
-          >
+          <v-btn variant="text" color="grey-darken-2" class="mr-3" @click="cancelarFormulario">
             Cancelar
           </v-btn>
-          <v-btn
-              type="submit"
-              color="primary"
-              variant="flat"
-              :loading="isSubmitting"
-          >
+          <v-btn type="submit" color="primary" variant="flat" :loading="isSubmitting">
             Salvar
           </v-btn>
         </div>
@@ -171,41 +160,40 @@ async function deletarBalao(id?: number) {
       Nenhum balão informativo cadastrado para este processo.
     </v-alert>
 
-    <!-- Lista de Balões -->
-    <div v-else class="mt-4 d-flex flex-column gap-3">
-      <v-card
+    <!-- Lista de Balões Estilizada e Azul -->
+    <div v-else class="mt-4">
+      <v-alert
           v-for="balao in baloes"
           :key="balao.id"
-          variant="outlined"
-          class="border-sm"
+          variant="tonal"
+          color="info"
+          border="start"
+          class="mb-3"
       >
-        <v-card-item>
-          <template v-slot:title>
-            <span class="text-subtitle-1 font-weight-bold text-primary">{{ balao.titulo }}</span>
-          </template>
-          <template v-slot:append>
-            <div class="d-flex gap-1">
-              <v-btn
-                  icon="mdi-pencil"
-                  variant="text"
-                  size="small"
-                  color="grey-darken-1"
-                  @click="abrirEdicao(balao)"
-              ></v-btn>
-              <v-btn
-                  icon="mdi-delete"
-                  variant="text"
-                  size="small"
-                  color="error"
-                  @click="deletarBalao(balao.id)"
-              ></v-btn>
-            </div>
-          </template>
-        </v-card-item>
-        <v-card-text class="text-body-1 text-grey-darken-3 pt-2">
-          {{ balao.mensagem }}
-        </v-card-text>
-      </v-card>
+        <div class="d-flex justify-space-between align-start w-100">
+          <div>
+            <div class="text-subtitle-1 font-weight-bold text-blue-darken-4">{{ balao.titulo }}</div>
+            <div class="text-body-2 mt-1 text-blue-darken-3">{{ balao.mensagem }}</div>
+          </div>
+          <div class="d-flex align-center ml-4">
+            <v-btn
+                icon="mdi-pencil"
+                variant="text"
+                size="small"
+                color="blue-darken-3"
+                class="mr-1"
+                @click="abrirEdicao(balao)"
+            ></v-btn>
+            <v-btn
+                icon="mdi-delete"
+                variant="text"
+                size="small"
+                color="error"
+                @click="deletarBalao(balao.id)"
+            ></v-btn>
+          </div>
+        </div>
+      </v-alert>
     </div>
   </div>
 </template>

@@ -328,6 +328,7 @@ watch(
       <v-card
         variant="outlined"
         class="mb-6"
+        style="border-color: #a8a8a8;"
       >
         <v-card-item>
 
@@ -409,7 +410,7 @@ watch(
       <!-- BALÕES DO DEV D                         -->
       <!-- ========================================= -->
 
-      <v-card variant="outlined">
+      <v-card variant="outlined" style="border-color: #a8a8a8;">
         <v-card-title
           class="d-flex align-center justify-space-between pa-4"
         >
@@ -422,7 +423,7 @@ watch(
             color="secondary"
             variant="outlined"
           >
-            Área do Dev D
+            Avisos
           </v-chip>
         </v-card-title>
 
