@@ -93,7 +93,6 @@ Certifique-se de ter instalado em sua máquina:
 2. Instale as dependências:
    ```bash
    npm ci
-   npm install @vee-validate/zod
    ```
 
 3. Inicie o servidor de desenvolvimento:
