@@ -338,10 +338,20 @@ watch(
           <v-row>
             <!-- ID -->
             <v-col
-              cols="12"
-              md="6"
+                cols="12"
+                md="6"
             >
+              <div
+                  class="text-subtitle-2 text-grey-darken-1"
+              >
+                ID do Processo
+              </div>
 
+              <div
+                  class="text-body-1 font-weight-medium"
+              >
+                #{{ processo.id }}
+              </div>
             </v-col>
 
             <!-- VAGAS -->
